@@ -26,13 +26,6 @@ require_once '../view/header.php';
                 <input type="file" name="image" />
                 <input type="submit" />
             </form>
-            <form action="." method="POST">
-                <input type="hidden" name="action" value="changeUser" />
-                <span class="error"><?php echo htmlspecialchars($user_message, ENT_QUOTES | ENT_HTML5, 'UTF-8') ?></span><br>
-                <label>Username: </label><br>
-                <input type="text" name="newuser" placeholder="Change Username"><br>
-                <input type="submit" value="Submit"><br>
-            </form>
             <form action="index.php" method="POST">
                 <span class="error"><?php echo htmlspecialchars($pass_message, ENT_QUOTES | ENT_HTML5, 'UTF-8') ?></span><br>
                 <input type="hidden" name="action" value="changePassword" />
@@ -40,14 +33,6 @@ require_once '../view/header.php';
                 <input type="password" name="newpass" placeholder="Change Password"><br>
                 <input type="submit" value="Submit"><br>
             </form>
-            <form action="index.php" method="POST">
-                <span class="error"><?php echo htmlspecialchars($email_message, ENT_QUOTES | ENT_HTML5, 'UTF-8') ?></span><br>
-                <input type="hidden" name="action" value="changeEmail" />
-                <label>E-mail: </label><br>
-                <input type="text" name="newemail" placeholder="Change Email"><br>
-                <input type="submit" value="Submit"><br>
-            </form>
-            <br>
             <br>
             <br>
             <form action="index.php" method="POST">

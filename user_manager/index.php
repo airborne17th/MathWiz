@@ -18,17 +18,17 @@ switch ($action) {
         // Fetch the data from the registration attempt
         $first_name = filter_input(INPUT_POST, 'first_name');
         $last_name = filter_input(INPUT_POST, 'last_name');
-        $userTest = filter_input(INPUT_POST, "newuser");
         $passTest = filter_input(INPUT_POST, "newpass");
-
+        $userTest = $first_name.'.'.$last_name;
         // Values used for validation
         $validationCounter = 0;
         $isValid = true;
 
+        $dupCounter = 0;
+
         // Validate the inputs
         if (
-            empty($first_name) || empty($last_name) || empty($userTest) || empty($passTest) ||
-            $email === NULL || $email === false
+            empty($first_name) || empty($last_name) || empty($passTest)
         ) {
             $error_message = "Invalid user data! Check all fields and try again.";
             $isValid = false;
@@ -37,15 +37,15 @@ switch ($action) {
         }
 
         // Regex validation
-        if (preg_match('/^[A-Za-z]/', $userTest)) {
+        if (preg_match('/[A-Za-z]/', $first_name)) {
         } else {
-            $error_message = "User must start with a letter.";
+            $error_message = "First Name must be letters.";
             $isValid = false;
         }
 
-        if (preg_match('/^[a-zA-Z\d_-]{4,30}$/', $userTest)) {
+        if (preg_match('/[A-Za-z]/', $last_name)) {
         } else {
-            $error_message = "User must be within 4 to 30 characters in length. Username cannot have special characters (@$!%*?&).";
+            $error_message = "Last Name must be letters.";
             $isValid = false;
         }
 
@@ -73,12 +73,21 @@ switch ($action) {
             $isValid = false;
         }
 
-        $userResult = UserDB::duplicateUser($userTest);
         // Test for duplicate username
-        if ($userResult > 0) {
-            $error_message = "Username in use.";
-            $isValid = false;
-        } 
+        $userResult = UserDB::duplicateUser($userTest);
+        if($userResult > 0){
+
+        } else{
+            // Have a test string to increment against
+            $userDupTest = $userTest;
+            while ($userResult > 0) {
+                // Go up a single digit every time there is a duplicate number
+                $dupCounter++;
+                $userDupTest = $userTest.$dupCounter;
+                $userResult = UserDB::duplicateUser($userDupTest);
+            } 
+            $userTest = $userDupTest;
+        }
 
         if (isset($_SESSION["user_name"]) && $_SESSION["user_name"] != "!") {
             $error_message = "You are already logged in. You cannot be logged in while creating a new account.";
@@ -187,7 +196,6 @@ switch ($action) {
     case 'profile':
         $user_message = '';
         $pass_message = '';
-        $email_message = '';
         if (isset($_SESSION["user_name"])) {
         } else {
             // This can never be set by a user naturally with the regex.
@@ -211,51 +219,13 @@ switch ($action) {
             include('userprofile.php');
         }
         break;
-    case 'changeUser':
-        $oldUser = $_SESSION["user_name"];
-        $userTest = filter_input(INPUT_POST, "newuser");
-        $userResult = UserDB::duplicateUser($userTest);
-        $isValid = true;
-        if (preg_match('/^[A-Za-z]/', $userTest)) {
-        } else {
-            $error_message = "User must start with a letter.";
-            $isValid = false;
-        }
-
-        if (preg_match('/^[a-zA-Z\d_-]{4,30}$/', $userTest)) {
-        } else {
-            $error_message = "User must be within 4 to 30 characters in length. Username cannot have special characters (@$!%*?&).";
-            $isValid = false;
-        }
-
-        // Test for duplicate username
-        if ($userResult > 0) {
-            $user_message = "Username in use.";
-            $isValid = false;
-        } else {
-        }
-
-        if ($isValid == true) {
-            $newUser = $userTest;
-            $user_message = "Username successfully updated.";
-            UserDB::changeUser($newUser, $oldUser);
-            $_SESSION["user_name"] = $newUser;
-        }
-
-        $pass_message = '';
-        $email_message = '';
-        $user_display = $_SESSION["user_name"];
-        $userID = UserDB::fetchUserID($user_display);
-        $user_image = UserDB::fetchImage($userID[0]);
-        include('userprofile.php');
-        break;
     case 'changePassword':
         $passTest = filter_input(INPUT_POST, "newpass");
         $validationCounter = 0;
         $isValid = true;
-        if (preg_match('/^.{12,}$/', $passTest)) {
+        if (preg_match('/^.{10,}$/', $passTest)) {
         } else {
-            $pass_message = "Password must be at least 12 characters long.";
+            $pass_message = "Password must be at least 10 characters long.";
             $isValid = false;
         }
 
@@ -292,26 +262,26 @@ switch ($action) {
         $user_image = UserDB::fetchImage($userID[0]);
         include('userprofile.php');
         break;
-    case 'changeEmail':
-        $emailTest = filter_input(INPUT_POST, "newemail");
-        $emailResult = UserDB::duplicateEmail($emailTest);
-        if ($emailResult > 0) {
-            $email_message = "E-mail in use.";
-        } else {
-            $newEmail = $emailTest;
-            $user = $_SESSION["user_name"];
-            $email_message = "E-mail successfully updated.";
-            UserDB::changeEmail($newEmail, $user);
-        }
+    // case 'changeEmail':
+    //     $emailTest = filter_input(INPUT_POST, "newemail");
+    //     $emailResult = UserDB::duplicateEmail($emailTest);
+    //     if ($emailResult > 0) {
+    //         $email_message = "E-mail in use.";
+    //     } else {
+    //         $newEmail = $emailTest;
+    //         $user = $_SESSION["user_name"];
+    //         $email_message = "E-mail successfully updated.";
+    //         UserDB::changeEmail($newEmail, $user);
+    //     }
 
-        $pass_message = '';
-        $user_message = '';
-        $user_display = $_SESSION["user_name"];
-        $userID = UserDB::fetchUserID($user_display);
-        $user_image = UserDB::fetchImage($userID[0]);
+    //     $pass_message = '';
+    //     $user_message = '';
+    //     $user_display = $_SESSION["user_name"];
+    //     $userID = UserDB::fetchUserID($user_display);
+    //     $user_image = UserDB::fetchImage($userID[0]);
 
-        include('userprofile.php');
-        break;
+    //     include('userprofile.php');
+    //     break;
     case 'uploadImage':
         $user_display = $_SESSION["user_name"];
         $error;
@@ -357,6 +327,7 @@ switch ($action) {
             }
         }
         break;
+        /*
     case 'list_users':
         $a = '<p class="alert alert-success" role="alert" type="hidden" >';
         $b = '<p class="alert alert-danger" role="alert" type="hidden" >';
@@ -402,7 +373,7 @@ switch ($action) {
         include('public_profile.php');
         break;
 
-        /*
+        
     case 'post_comment':
         if (isset($user_name) === false) :
             $user_name = '';
